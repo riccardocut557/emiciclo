@@ -1,0 +1,21 @@
+{
+  "name": "cycle-trading-bot",
+  "version": "1.0.0",
+  "description": "Server-side Cycle Trading Bot for Binance Futures",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "crypto-js": "^4.2.0",
+    "dotenv": "^16.3.1",
+    "node-fetch": "^3.3.2",
+    "nodemailer": "^7.0.12",
+    "winston": "^3.11.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

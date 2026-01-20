@@ -1,0 +1,881 @@
+2
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Interactive cryptocurrency candlestick charts with zoom, pan, and stretch capabilities">
+    <title>Crypto Candlestick Charts - BTC, SUI, Solana & More</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
+</head>
+
+<body>
+    <div class="menu-overlay" id="menu-overlay"></div>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div class="header-left">
+                    <button id="hamburger-btn" class="hamburger-btn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M3 12h18M3 6h18M3 18h18" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                    <div>
+                        <h1>Crypto Candlestick Charts</h1>
+                        <p class="subtitle">Interactive charts with zoom, pan & stretch</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button onclick="window.SettingsManager.saveSettings()" class="save-setup-btn icon-only-mobile"
+                        title="Save Setup">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
+                        <span class="btn-text">Save Setup</span>
+                    </button>
+                    <span id="user-email" class="user-email"></span>
+                    <button onclick="window.auth.signOut()" class="logout-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mobile-icon">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span class="btn-text">Logout</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+        <style>
+            /* Existing styles are in style.css, adding overrides here or inline */
+            .header-content {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                width: 100%;
+                padding: 0 0.5rem;
+            }
+
+            .header-left,
+            .header-right {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
+
+            .save-setup-btn {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                padding: 0.5rem 1rem;
+                background: rgba(99, 102, 241, 0.2);
+                border: 1px solid rgba(99, 102, 241, 0.5);
+                color: #a5b4fc;
+                border-radius: 6px;
+                cursor: pointer;
+                transition: all 0.2s;
+                font-size: 0.9rem;
+            }
+
+            .logout-btn {
+                padding: 0.5rem 1rem;
+                background: rgba(239, 68, 68, 0.2);
+                border: 1px solid rgba(239, 68, 68, 0.5);
+                color: #fca5a5;
+                border-radius: 6px;
+                cursor: pointer;
+                transition: all 0.2s;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .mobile-icon {
+                display: none;
+            }
+
+            .user-email {
+                font-size: 0.9rem;
+                color: #9ca3af;
+            }
+
+            @media (max-width: 768px) {
+                h1 {
+                    font-size: 1.1rem;
+                }
+
+                .subtitle {
+                    display: none;
+                }
+
+                /* Hide subtitle on mobile to save space */
+                .header-content {
+                    flex-direction: column;
+                    gap: 0.5rem;
+                    align-items: flex-start;
+                    padding-bottom: 0.5rem;
+                }
+
+                .header-left {
+                    width: 100%;
+                    justify-content: space-between;
+                }
+
+                .header-right {
+                    width: 100%;
+                    justify-content: space-between;
+                    gap: 0.5rem;
+                    border-top: 1px solid rgba(255, 255, 255, 0.1);
+                    padding-top: 0.5rem;
+                }
+
+                .user-email {
+                    font-size: 0.8rem;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    max-width: 120px;
+                }
+
+                .save-setup-btn,
+                .logout-btn {
+                    padding: 0.4rem 0.6rem;
+                    font-size: 0.8rem;
+                }
+
+                .btn-text {
+                    display: none;
+                }
+
+                /* Hide text on very small screens if needed, or keep */
+                .mobile-icon {
+                    display: block;
+                }
+
+                .save-setup-btn .btn-text,
+                .logout-btn .btn-text {
+                    display: inline;
+                }
+
+                /* Keep text for now, adjust if still too tight */
+            }
+
+            @media (max-width: 480px) {
+                .btn-text {
+                    display: none;
+                }
+
+                /* Icon only on phones */
+                .mobile-icon {
+                    display: block;
+                }
+
+                .save-setup-btn {
+                    padding: 0.4rem;
+                }
+            }
+        </style>
+
+        <div class="controls-panel">
+            <div style="display:flex; flex-wrap:wrap; gap:1rem; align-items:center; width:100%;">
+
+                <!-- Crypto & Timeframe -->
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <select id="crypto-select" class="crypto-selector" style="padding:0.3rem; min-width:140px;">
+                        <optgroup label="Top Cryptos">
+                            <option value="SUIUSDT" selected>SUI</option>
+                            <option value="BTCUSDT">BTC</option>
+                            <option value="ETHUSDT">ETH</option>
+                            <option value="BNBUSDT">BNB</option>
+                            <option value="SOLUSDT">SOL</option>
+                            <option value="XRPUSDT">XRP</option>
+                            <option value="DOGEUSDT">DOGE</option>
+                            <option value="ADAUSDT">ADA</option>
+                            <option value="TRXUSDT">TRX</option>
+                            <option value="SHIBUSDT">SHIB</option>
+                            <option value="AVAXUSDT">AVAX</option>
+                            <option value="TONUSDT">TON</option>
+                            <option value="DOTUSDT">DOT</option>
+                            <option value="LINKUSDT">LINK</option>
+                            <option value="BCHUSDT">BCH</option>
+                            <option value="NEARUSDT">NEAR</option>
+                            <option value="MATICUSDT">MATIC</option>
+                            <option value="LTCUSDT">LTC</option>
+                            <option value="UNIUSDT">UNI</option>
+                            <option value="PEPEUSDT">PEPE</option>
+                        </optgroup>
+                    </select>
+                    <div class="timeframe-buttons">
+                        <button class="tf-btn" data-timeframe="1m" style="padding:0.3rem 0.5rem;">1m</button>
+                        <button class="tf-btn" data-timeframe="5m" style="padding:0.3rem 0.5rem;">5m</button>
+                        <button class="tf-btn" data-timeframe="15m" style="padding:0.3rem 0.5rem;">15m</button>
+                        <button class="tf-btn active" data-timeframe="1h" style="padding:0.3rem 0.5rem;">1h</button>
+                        <button class="tf-btn" data-timeframe="4h" style="padding:0.3rem 0.5rem;">4h</button>
+                        <button class="tf-btn" data-timeframe="1d" style="padding:0.3rem 0.5rem;">1d</button>
+                    </div>
+                </div>
+
+                <div style="width:1px; height:24px; background:rgba(255,255,255,0.1);"></div>
+
+                <!-- Toggles Group 1: Cycles -->
+                <div style="display:flex; gap:1rem; align-items:center;">
+                    <label
+                        style="cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 0.8rem; color:#3b82f6;">
+                        <input type="checkbox" id="show-index-cycles" checked> Index (L-H-L)
+                    </label>
+                    <label
+                        style="cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 0.8rem; color:#ef4444;">
+                        <input type="checkbox" id="show-inverse-cycles" checked> Inverse (H-L-H)
+                    </label>
+                </div>
+
+                <div style="width:1px; height:24px; background:rgba(255,255,255,0.1);"></div>
+
+                <!-- Toggles Group 2: Visuals -->
+                <div style="display:flex; gap:0.8rem; align-items:center;">
+                    <label style="font-size: 0.8rem; color:#9ca3af; display:flex; align-items:center; gap:3px;"><input
+                            type="checkbox" id="show-labels" checked> Labels</label>
+                    <label style="font-size: 0.8rem; color:#9ca3af; display:flex; align-items:center; gap:3px;"><input
+                            type="checkbox" id="show-parabola" checked> Parabola</label>
+                    <label style="font-size: 0.8rem; color:#9ca3af; display:flex; align-items:center; gap:3px;"><input
+                            type="checkbox" id="show-projections" checked> Proj</label>
+                    <label style="font-size: 0.8rem; color:#9ca3af; display:flex; align-items:center; gap:3px;"><input
+                            type="checkbox" id="use-momentum-rule"> Mom Filter</label>
+                    <label style="font-size: 0.8rem; color:#9ca3af; display:flex; align-items:center; gap:3px;"><input
+                            type="checkbox" id="priority-24-bars" checked> Force 24 Bars</label>
+                </div>
+
+                <div style="width:1px; height:24px; background:rgba(255,255,255,0.1);"></div>
+
+                <!-- Custom Cycle Range -->
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <span style="font-size: 0.75rem; color:#9ca3af;">Range:</span>
+                    <input type="number" id="custom-min" value="21" min="5" max="200"
+                        style="width: 45px; background: rgba(255,255,255,0.05); border: 1px solid rgba(99,102,241,0.3); color: white; padding: 0.2rem 0.3rem; border-radius: 4px; font-size: 0.8rem; text-align: center;">
+                    <span style="font-size: 0.75rem; color:#9ca3af;">-</span>
+                    <input type="number" id="custom-max" value="47" min="5" max="200"
+                        style="width: 45px; background: rgba(255,255,255,0.05); border: 1px solid rgba(99,102,241,0.3); color: white; padding: 0.2rem 0.3rem; border-radius: 4px; font-size: 0.8rem; text-align: center;">
+                    <span style="font-size: 0.75rem; color:#9ca3af;">bars</span>
+                </div>
+
+                <div style="width:1px; height:24px; background:rgba(255,255,255,0.1);"></div>
+
+                <!-- Precision / Sensitivity -->
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <span style="font-size: 0.75rem; color:#9ca3af;" title="Stricter swing detection">Precision:</span>
+                    <select id="cycle-precision"
+                        style="background: rgba(255,255,255,0.05); border: 1px solid rgba(99,102,241,0.3); color: white; padding: 0.2rem 0.3rem; border-radius: 4px; font-size: 0.8rem;">
+                        <option value="1">Normal (1-bar)</option>
+                        <option value="2">Strong (2-bar)</option>
+                        <option value="3">Strict (3-bar)</option>
+                    </select>
+                </div>
+
+                <div style="width:1px; height:24px; background:rgba(255,255,255,0.1);"></div>
+
+                <!-- Vertical Scale -->
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <span style="font-size: 0.75rem; color:#9ca3af;">V-Scale:</span>
+                    <input type="range" id="v-scale" min="50" max="300" value="100"
+                        style="width: 80px; accent-color: #6366f1;">
+                    <span id="v-scale-value" style="font-size: 0.75rem; color:#9ca3af; min-width: 30px;">100%</span>
+                </div>
+
+                <div style="flex:1;"></div>
+
+                <!-- Actions -->
+                <div style="display:flex; gap:0.5rem;">
+                    <div style="display:flex; align-items:center; gap:0.3rem;">
+                        <input type="checkbox" id="voice-enabled" style="accent-color: #f59e0b;">
+                        <span style="font-size: 0.75rem; color:#9ca3af;">Voice</span>
+                    </div>
+                    <button id="optimize-btn" class="action-btn"
+                        style="padding: 0.3rem 0.6rem; background: linear-gradient(135deg, #10b981, #059669); border: none;">🔍
+                        Optimize</button>
+                    <button id="reset-btn" class="action-btn" style="padding: 0.3rem 0.6rem;">Reset</button>
+                    <button id="refresh-btn" class="action-btn" style="padding: 0.3rem 0.6rem;">Refresh</button>
+                </div>
+            </div>
+
+            <!-- Hidden inputs needed for JS logic preservation -->
+            <div style="display:none;">
+                <input type="number" id="mom-cycs" value="50">
+                <input type="number" id="mom-lbl" value="5">
+                <input type="number" id="mom-lbr" value="5">
+                <input type="number" id="mom-min" value="5">
+                <input type="number" id="mom-max" value="60">
+                <input type="checkbox" id="show-min" checked>
+                <!-- priority-24-bars moved to visible controls -->
+                <button id="manual-mode-btn">Set Manual</button>
+                <button id="clear-manual-btn">Clear</button>
+            </div>
+        </div>
+
+
+    </div>
+
+    <!-- Index Cycles Stats Panel -->
+    <div id="index-stats-panel" class="cycle-stats-panel index-panel">
+        <h3><span style="color: #3b82f6;">●</span> Index Cycles (Low-High-Low)</h3>
+        <div class="stats-content">
+            <div class="stats-metrics">
+                <div class="metric"><span class="label">Cycles</span><span id="idx-count" class="value">0</span></div>
+                <div class="metric"><span class="label">Avg Duration</span><span id="idx-avg-dur" class="value">-</span>
+                </div>
+                <div class="metric highlight"><span class="label">Avg Pump %</span><span id="idx-avg-pump"
+                        class="value positive">-</span></div>
+                <div class="metric"><span class="label">Max Δ Price</span><span id="idx-max-price"
+                        class="value">-</span></div>
+                <div class="metric"><span class="label">Std Dev</span><span id="idx-std" class="value">-</span></div>
+                <div class="metric"><span class="label">First→End</span><span id="idx-first-end" class="value">-</span>
+                </div>
+                <div class="metric"><span class="label">Vol Δ Pre</span><span id="idx-vol-pre" class="value">-</span>
+                </div>
+                <div class="metric"><span class="label">Vol Δ Post</span><span id="idx-vol-post" class="value">-</span>
+                </div>
+                <!-- Money Management Metrics -->
+                <div class="metric highlight"><span class="label">Est. Net ROI</span><span id="idx-est-roi"
+                        class="value">-</span></div>
+                <div class="metric"><span class="label">Est. Profit</span><span id="idx-est-profit"
+                        class="value">-</span></div>
+                <div class="metric"><span class="label">Status</span><span id="idx-mm-status" class="value">-</span>
+                </div>
+            </div>
+            <div class="stats-charts">
+                <div class="chart-box">
+                    <span class="chart-label">Duration Trend</span>
+                    <canvas id="idx-trend-chart" width="240" height="135"></canvas>
+                </div>
+                <div class="chart-box">
+                    <span class="chart-label">Range Heatmap <button id="idx-heatmap-btn"
+                            style="font-size:8px; padding:1px 4px; margin-left:4px; cursor:pointer; background:#3b82f6; color:white; border:none; border-radius:3px;">Simulate</button></span>
+                    <canvas id="idx-heatmap" width="240" height="135"></canvas>
+                </div>
+                <div class="chart-box">
+                    <span class="chart-label">Volume Δ</span>
+                    <canvas id="idx-vol-chart" width="240" height="135"></canvas>
+                </div>
+                <div class="chart-box">
+                    <span class="chart-label">Reliability</span>
+                    <canvas id="idx-gauge-chart" width="240" height="135"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inverse Cycles Stats Panel -->
+    <div id="inverse-stats-panel" class="cycle-stats-panel inverse-panel">
+        <h3><span style="color: #ef4444;">●</span> Inverse Cycles (High-Low-High)</h3>
+        <div class="stats-content">
+            <div class="stats-metrics">
+                <div class="metric"><span class="label">Cycles</span><span id="inv-count" class="value">0</span></div>
+                <div class="metric"><span class="label">Avg Duration</span><span id="inv-avg-dur" class="value">-</span>
+                </div>
+                <div class="metric highlight"><span class="label">Avg Drop %</span><span id="inv-avg-drop"
+                        class="value negative">-</span></div>
+                <div class="metric"><span class="label">Max Δ Price</span><span id="inv-max-price"
+                        class="value">-</span></div>
+                <div class="metric"><span class="label">Std Dev</span><span id="inv-std" class="value">-</span></div>
+                <div class="metric"><span class="label">First→End</span><span id="inv-first-end" class="value">-</span>
+                </div>
+                <div class="metric"><span class="label">Vol Δ Pre</span><span id="inv-vol-pre" class="value">-</span>
+                </div>
+                <div class="metric"><span class="label">Vol Δ Post</span><span id="inv-vol-post" class="value">-</span>
+                </div>
+                <!-- Money Management Metrics -->
+                <div class="metric highlight"><span class="label">Est. Net ROI</span><span id="inv-est-roi"
+                        class="value">-</span></div>
+                <div class="metric"><span class="label">Est. Profit</span><span id="inv-est-profit"
+                        class="value">-</span></div>
+                <div class="metric"><span class="label">Status</span><span id="inv-mm-status" class="value">-</span>
+                </div>
+            </div>
+            <div class="stats-charts">
+                <div class="chart-box">
+                    <span class="chart-label">Duration Trend</span>
+                    <canvas id="inv-trend-chart" width="240" height="135"></canvas>
+                </div>
+                <div class="chart-box">
+                    <span class="chart-label">Range Heatmap <button id="inv-heatmap-btn"
+                            style="font-size:8px; padding:1px 4px; margin-left:4px; cursor:pointer; background:#ef4444; color:white; border:none; border-radius:3px;">Simulate</button></span>
+                    <canvas id="inv-heatmap" width="240" height="135"></canvas>
+                </div>
+                <div class="chart-box">
+                    <span class="chart-label">Volume Δ</span>
+                    <canvas id="inv-vol-chart" width="240" height="135"></canvas>
+                </div>
+                <div class="chart-box">
+                    <span class="chart-label">Reliability</span>
+                    <canvas id="inv-gauge-chart" width="240" height="135"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bot-dashboard-container" style="display:flex; gap: 1rem; margin-bottom: 1rem;">
+        <!-- Left Side: Bot Panel -->
+        <div style="flex: 3; min-width: 0;">
+            <div class="bot-panel-compact" style="height: 100%;">
+                <div class="bot-row">
+                    <span class="bot-title">🤖 Bot</span>
+                    <label class="bot-toggle"><input type="checkbox" id="bot-enabled" checked><span
+                            class="toggle-slider"></span></label>
+                    <span id="bot-status" class="bot-status">OFF</span>
+
+                    <div class="bot-input"><label>Bal</label><input type="number" id="bot-balance" value="1000"
+                            min="100" step="100" class="w-large"></div>
+                    <div class="bot-input"><label>Lev</label><input type="number" id="bot-leverage" value="20" min="1"
+                            max="125" step="1" class="w-small"></div>
+                    <div class="bot-input"><label>Cap%</label><input type="number" id="bot-capital" value="15" min="1"
+                            max="100" step="1" class="w-small"></div>
+                    <div class="bot-input"><label>TP1%</label><input type="number" id="bot-tp1-pct" value="25" min="10"
+                            max="100" step="5"></div>
+                    <div class="bot-input"><label>TP1 Cl%</label><input type="number" id="bot-tp1-close" value="90"
+                            min="10" max="90" step="10"></div>
+                    <div class="bot-input"><label>TP2%</label><input type="number" id="bot-tp2-pct" value="150" min="50"
+                            max="300" step="10"></div>
+                    <div class="bot-input fees"><label>Fees 0.04%</label><label class="bot-toggle small"><input
+                                type="checkbox" id="bot-fees" checked><span class="toggle-slider"></span></label></div>
+                    <div class="bot-input fees"><label>Confirmation</label><label class="bot-toggle small"><input
+                                type="checkbox" id="bot-3bar"><span class="toggle-slider"></span></label></div>
+                    <div class="bot-input fees"><label>Opp. Close</label><label class="bot-toggle small"><input
+                                type="checkbox" id="bot-opp-close"><span class="toggle-slider"></span></label></div>
+                    <div class="bot-input fees"><label>MA Trend</label><label class="bot-toggle small"><input
+                                type="checkbox" id="bot-ma-trend"><span class="toggle-slider"></span></label></div>
+                    <div class="bot-input"><label>Max Loss%</label><input type="number" id="bot-max-loss-pct" value="5"
+                            min="1" max="100" step="1" class="w-small"></div>
+                    <div class="bot-input fees"><label>Max Loss</label><label class="bot-toggle small"><input
+                                type="checkbox" id="bot-max-loss"><span class="toggle-slider"></span></label></div>
+                    <div class="bot-input fees"><label>Multi Trade</label><label class="bot-toggle small"><input
+                                type="checkbox" id="bot-multi-trade" checked><span class="toggle-slider"></span></label>
+                    </div>
+                    <div class="bot-input fees"><label
+                            title="900 bars optimize / 100 bars test">Walk-Forward</label><label
+                            class="bot-toggle small"><input type="checkbox" id="bot-walk-forward"><span
+                                class="toggle-slider"></span></label>
+                    </div>
+                </div>
+                <!-- Advanced & Risk Management Row -->
+                <div class="bot-row advanced-options"
+                    style="flex-wrap: wrap; gap: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; margin-top: 8px;">
+
+                    <!-- Volume Filter Section -->
+                    <div class="filter-section"
+                        style="display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: rgba(255,255,255,0.03); border-radius: 6px;">
+                        <label class="bot-toggle small"><input type="checkbox" id="bot-vol-filter"><span
+                                class="toggle-slider"></span></label>
+                        <span style="font-size: 11px; color: #f59e0b; font-weight: 500;">Volume Filter</span>
+                        <span style="font-size: 10px; opacity: 0.6;">Factor:</span>
+                        <input type="number" id="bot-vol-factor" value="1.2" step="0.1" class="w-small"
+                            title="Volume must be > SMA20 × this factor">
+                    </div>
+
+                    <!-- Trailing Stop Section -->
+                    <div class="filter-section"
+                        style="display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: rgba(255,255,255,0.03); border-radius: 6px;">
+                        <label class="bot-toggle small"><input type="checkbox" id="bot-trailing" checked><span
+                                class="toggle-slider"></span></label>
+                        <span style="font-size: 11px; color: #10b981; font-weight: 500;">Trailing Stop</span>
+                        <span style="font-size: 10px; opacity: 0.6;">Act%:</span>
+                        <input type="number" id="bot-trail-act" value="3.2" step="0.1" class="w-small"
+                            title="Profit % to activate trailing">
+                        <span style="font-size: 10px; opacity: 0.6;">Dist%:</span>
+                        <input type="number" id="bot-trail-callback" value="0.8" step="0.1" class="w-small"
+                            title="Distance % from peak">
+                    </div>
+
+                    <!-- Dynamic ATR Exits Section -->
+                    <div class="filter-section"
+                        style="display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: rgba(255,255,255,0.03); border-radius: 6px;">
+                        <label class="bot-toggle small"><input type="checkbox" id="bot-dyn-exit" checked><span
+                                class="toggle-slider"></span></label>
+                        <span style="font-size: 11px; color: #8b5cf6; font-weight: 500;">Dynamic ATR</span>
+                        <span style="font-size: 10px; opacity: 0.6;">SL×:</span>
+                        <input type="number" id="bot-dyn-sl-mult" value="2.0" step="0.1" class="w-small"
+                            title="SL = ATR × this multiplier">
+                        <span style="font-size: 10px; opacity: 0.6;">TP×:</span>
+                        <input type="number" id="bot-dyn-tp-mult" value="3.0" step="0.1" class="w-small"
+                            title="TP = ATR × this multiplier">
+                    </div>
+
+                    <!-- AI Forecast Section -->
+                    <div class="filter-section" id="neural-result"
+                        style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 4px 12px; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); border-radius: 6px; min-width: 120px;">
+                        <div style="display:flex; align-items:center; gap:4px; margin-bottom: 2px;">
+                            <span style="font-size: 10px; color: #9ca3af;">AI Forecast</span>
+                            <label class="bot-toggle small" title="Toggle AI Forecast (Reduces Lag)">
+                                <input type="checkbox" id="ai-enabled"><span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div id="neural-result-content" style="width: 100%; text-align: center;">
+                            <span style="font-size: 11px; font-weight: bold; color: #9ca3af;">Initializing...</span>
+                        </div>
+                    </div>
+
+                    <!-- Pyramiding Section -->
+                    <div class="filter-section"
+                        style="display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: rgba(255,255,255,0.03); border-radius: 6px;">
+                        <label class="bot-toggle small"><input type="checkbox" id="bot-pyramiding" checked><span
+                                class="toggle-slider"></span></label>
+                        <span style="font-size: 11px; color: #ec4899; font-weight: 500;"
+                            title="Add 50% to position on rejection patterns at cycle levels">Pyramiding</span>
+                    </div>
+                </div>
+                <div class="bot-row stats">
+                    <div class="stat"><span>PnL</span><span id="bot-pnl" class="val">$0</span></div>
+                    <div class="stat"><span>PnL%</span><span id="bot-pnl-percent" class="val">0%</span></div>
+                    <div class="stat"><span>WR</span><span id="bot-winrate" class="val">0%</span></div>
+                    <div class="stat"><span>Trades</span><span id="bot-trades" class="val">0</span></div>
+                    <div class="stat"><span>Balance</span><span id="bot-current-balance" class="val">$1000</span></div>
+                </div>
+                <div id="wf-stats-row" class="bot-row stats wf-only"
+                    style="display:none; border-top: 1px dashed rgba(255,255,255,0.1); padding-top:5px; margin-top:5px;">
+                    <div class="stat"><span style="color:#22c55e;">PnL Train</span><span id="wf-train-pnl"
+                            class="val">$0</span></div>
+                    <div class="stat"><span style="color:#22c55e;">WR Train</span><span id="wf-train-wr"
+                            class="val">0%</span></div>
+                    <div class="stat"><span style="color:#f97316;">PnL Test</span><span id="wf-test-pnl"
+                            class="val">$0</span></div>
+                    <div class="stat"><span style="color:#f97316;">WR Test</span><span id="wf-test-wr"
+                            class="val">0%</span></div>
+                </div>
+                <div class="bot-row open-trade-row">
+                    <div class="open-trade-info">
+                        <span class="open-label">Open:</span>
+                        <span id="open-trade-type" class="open-type">-</span>
+                        <span class="open-label">Entry:</span>
+                        <span id="open-trade-entry" class="open-val">-</span>
+                        <span class="open-label">Unr.PnL:</span>
+                        <span id="open-trade-pnl" class="open-val">-</span>
+                    </div>
+                    <div class="open-trade-levels">
+                        <span class="level-label">TP1:</span>
+                        <span id="open-trade-tp1" class="level-val tp">-</span>
+                        <span class="level-label">TP2:</span>
+                        <span id="open-trade-tp2" class="level-val tp">-</span>
+                        <span class="level-label">SL:</span>
+                        <span id="open-trade-sl" class="level-val sl">-</span>
+                    </div>
+                </div>
+                <div class="bot-row table-row">
+                    <table class="trade-stats-table">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Long</th>
+                                <th>Short</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Qty</td>
+                                <td id="stat-long-qty">0</td>
+                                <td id="stat-short-qty">0</td>
+                                <td id="stat-total-qty">0</td>
+                            </tr>
+                            <tr>
+                                <td>Failed (SL)</td>
+                                <td id="stat-long-failed">0</td>
+                                <td id="stat-short-failed">0</td>
+                                <td id="stat-total-failed">0</td>
+                            </tr>
+                            <tr>
+                                <td>TP1</td>
+                                <td id="stat-long-tp1">0</td>
+                                <td id="stat-short-tp1">0</td>
+                                <td id="stat-total-tp1">0</td>
+                            </tr>
+                            <tr>
+                                <td>TP2</td>
+                                <td id="stat-long-tp2">0</td>
+                                <td id="stat-short-tp2">0</td>
+                                <td id="stat-total-tp2">0</td>
+                            </tr>
+                            <tr>
+                                <td>Cycle End</td>
+                                <td id="stat-long-cycle">0</td>
+                                <td id="stat-short-cycle">0</td>
+                                <td id="stat-total-cycle">0</td>
+                            </tr>
+                            <tr class="gain">
+                                <td>Gain TP1</td>
+                                <td id="stat-long-gain-tp1">$0</td>
+                                <td id="stat-short-gain-tp1">$0</td>
+                                <td id="stat-total-gain-tp1">$0</td>
+                            </tr>
+                            <tr class="gain">
+                                <td>Gain TP2</td>
+                                <td id="stat-long-gain-tp2">$0</td>
+                                <td id="stat-short-gain-tp2">$0</td>
+                                <td id="stat-total-gain-tp2">$0</td>
+                            </tr>
+
+                            <tr class="gain">
+                                <td>Gain Cycle</td>
+                                <td id="stat-long-gain-cycle">$0</td>
+                                <td id="stat-short-gain-cycle">$0</td>
+                                <td id="stat-total-gain-cycle">$0</td>
+                            </tr>
+                            <tr class="loss">
+                                <td>Loss SL</td>
+                                <td id="stat-long-loss-sl">$0</td>
+                                <td id="stat-short-loss-sl">$0</td>
+                                <td id="stat-total-loss-sl">$0</td>
+                            </tr>
+                            <tr class="loss">
+                                <td>Loss Cycle</td>
+                                <td id="stat-long-loss-cycle">$0</td>
+                                <td id="stat-short-loss-cycle">$0</td>
+                                <td id="stat-total-loss-cycle">$0</td>
+                            </tr>
+                            <tr class="gain" style="border-top: 2px solid rgba(16, 185, 129, 0.5);">
+                                <td><strong>Total Gain</strong></td>
+                                <td id="stat-long-total-gain">$0</td>
+                                <td id="stat-short-total-gain">$0</td>
+                                <td id="stat-total-total-gain">$0</td>
+                            </tr>
+                            <tr
+                                style="background: rgba(99, 102, 241, 0.15); border-top: 2px solid rgba(99, 102, 241, 0.5);">
+                                <td><strong>Net PnL</strong></td>
+                                <td id="stat-long-net-pnl">$0</td>
+                                <td id="stat-short-net-pnl">$0</td>
+                                <td id="stat-total-net-pnl">$0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <canvas id="bot-equity-chart" width="450" height="60"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: FFT Analysis + Combined Heatmap (50/50 split) -->
+        <div class="fft-panel"
+            style="flex: 1; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.5rem; display: flex; flex-direction: column; min-width: 300px; gap: 0.5rem;">
+
+            <!-- FFT Chart (50% height) -->
+            <div
+                style="flex: 1; display: flex; flex-direction: column; border: 1px solid #4b5563; border-radius: 6px; padding: 8px; background: rgba(30,30,40,0.3);">
+                <h4 style="margin: 0 0 4px 0; font-size: 12px; color: #9ca3af;">FFT Analysis</h4>
+                <canvas id="fft-chart" style="width: 100%; flex: 1;"></canvas>
+            </div>
+
+            <!-- Combined Heatmap (50% height) -->
+            <div
+                style="flex: 1; display: flex; flex-direction: column; border: 1px solid #4b5563; border-radius: 6px; padding: 8px; background: rgba(30,30,40,0.3);">
+                <h4 style="margin: 0 0 4px 0; font-size: 12px; color: #9ca3af;">
+                    Combined P&L (L+S)
+                    <button id="combined-heatmap-btn"
+                        style="font-size:8px; padding:2px 8px; margin-left:6px; cursor:pointer; background:linear-gradient(90deg, #3b82f6, #ef4444); color:white; border:none; border-radius:3px; font-weight: bold;">⚡
+                        Simulate All</button>
+                </h4>
+                <canvas id="combined-heatmap" style="width: 100%; flex: 1;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading chart data...</p>
+        </div>
+        <canvas id="chart-canvas"></canvas>
+        <div id="candle-countdown" class="candle-countdown">--:--</div>
+        <div id="price-info" class="price-info">
+            <div class="info-row">
+                <span class="info-label">Open:</span>
+                <span id="info-open" class="info-value">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">High:</span>
+                <span id="info-high" class="info-value">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Low:</span>
+                <span id="info-low" class="info-value">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Close:</span>
+                <span id="info-close" class="info-value">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Time:</span>
+                <span id="info-time" class="info-value">-</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historical Trades Table -->
+    <div class="trades-history-panel">
+        <div class="trades-history-header">
+            <h3>📋 Trade History</h3>
+            <div class="trades-filters">
+                <select id="filter-type" class="trade-filter-select">
+                    <option value="all">All Types</option>
+                    <option value="LONG">LONG</option>
+                    <option value="SHORT">SHORT</option>
+                </select>
+                <select id="filter-exit" class="trade-filter-select">
+                    <option value="all">All Exits</option>
+                    <option value="tp1">TP1</option>
+                    <option value="tp2">TP2</option>
+                    <option value="sl">SL</option>
+                    <option value="be">BE</option>
+                    <option value="cycle">Cycle</option>
+                </select>
+                <select id="filter-result" class="trade-filter-select">
+                    <option value="all">All Results</option>
+                    <option value="win">Wins</option>
+                    <option value="loss">Losses</option>
+                </select>
+            </div>
+            <span id="trades-timeframe" class="trades-timeframe">1m</span>
+        </div>
+        <div class="trades-table-wrapper">
+            <table class="trades-history-table">
+                <thead>
+                    <tr>
+                        <th class="sortable" data-sort="id"># ↕</th>
+                        <th class="sortable" data-sort="time">Time ↕</th>
+                        <th>Type</th>
+                        <th>Entry</th>
+                        <th>SL</th>
+                        <th>TP1</th>
+                        <th>TP2</th>
+                        <th class="sortable" data-sort="cycle">Cycle % ↕</th>
+                        <th class="sortable" data-sort="lagopen">Lag Open ↕</th>
+                        <th class="sortable" data-sort="lag">Lag ↕</th>
+                        <th>Close</th>
+                        <th>Exit</th>
+                        <th class="sortable" data-sort="dd">DD % ↕</th>
+                        <th class="sortable" data-sort="fees">Fees ↕</th>
+                        <th class="sortable" data-sort="pnl">P&L ↕</th>
+                    </tr>
+                </thead>
+                <tbody id="trades-history-body">
+                    <tr>
+                        <td colspan="15" class="no-trades">No trades yet</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Advanced Cycle Analysis Panel -->
+    <div class="cycle-analysis-panel"
+        style="margin: 1rem; padding: 1rem; background: linear-gradient(135deg, rgba(30,30,45,0.95), rgba(20,20,35,0.95)); border-radius: 12px; border: 1px solid rgba(99,102,241,0.3);">
+        <h3 style="margin: 0 0 1rem 0; color: #a5b4fc; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 3v18h18" />
+                <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3" />
+            </svg>
+            Advanced Cycle Analysis
+        </h3>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+            <!-- MESA Spectrum -->
+            <div
+                style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; padding: 1rem;">
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 0.5rem;">
+                    <div style="width: 8px; height: 8px; background: #3b82f6; border-radius: 50%;"></div>
+                    <span style="font-size: 12px; color: #93c5fd; font-weight: 600;">MESA Spectrum (Max Entropy)</span>
+                </div>
+                <div style="font-size: 10px; color: #9ca3af; margin-bottom: 8px;">Dominant cycle via spectral analysis
+                </div>
+                <div id="mesa-result"
+                    style="font-size: 20px; font-weight: bold; color: #3b82f6; font-family: 'Courier New', monospace;">
+                    Calculating...
+                </div>
+                <div style="margin-top: 8px; display: flex; gap: 4px; flex-wrap: wrap;" id="mesa-peaks"></div>
+            </div>
+
+            <!-- Hilbert Transform -->
+            <div
+                style="background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.3); border-radius: 8px; padding: 1rem;">
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 0.5rem;">
+                    <div style="width: 8px; height: 8px; background: #a855f7; border-radius: 50%;"></div>
+                    <span style="font-size: 12px; color: #d8b4fe; font-weight: 600;">Hilbert Transform</span>
+                </div>
+                <div style="font-size: 10px; color: #9ca3af; margin-bottom: 8px;">Instantaneous cycle period</div>
+                <div id="hilbert-result"
+                    style="font-size: 20px; font-weight: bold; color: #a855f7; font-family: 'Courier New', monospace;">
+                    Calculating...
+                </div>
+            </div>
+
+            <!-- Autocorrelation -->
+            <div
+                style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 8px; padding: 1rem;">
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 0.5rem;">
+                    <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;"></div>
+                    <span style="font-size: 12px; color: #6ee7b7; font-weight: 600;">Autocorrelation</span>
+                </div>
+                <div style="font-size: 10px; color: #9ca3af; margin-bottom: 8px;">Periodicity confirmation via lag</div>
+                <div id="autocorr-result"
+                    style="font-size: 20px; font-weight: bold; color: #10b981; font-family: 'Courier New', monospace;">
+                    Calculating...
+                </div>
+                <div id="autocorr-confidence" style="font-size: 11px; color: #6ee7b7; margin-top: 4px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="cycle_analysis.js"></script>
+    <script src="indicators.js"></script>
+    <script src="cycle_detector.js"></script>
+    <script src="chart.js"></script>
+    <!-- Supabase Auth -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://mablwjbeltdtoocqnnhv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hYmx3amJlbHRkdG9vY3Fubmh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyNTE1MjYsImV4cCI6MjA4MjgyNzUyNn0.lLRDr3MEFfaIU-i28KkJBWddaWs-Aj_l1Ao4Rvdc81E';
+
+        // Initialize Supabase client
+        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
+    <script src="auth.js"></script>
+    <script src="settings.js"></script>
+    <script>
+        // Check authentication immediately
+        (async () => {
+            try {
+                // Prevent content flash
+                document.body.style.visibility = 'hidden';
+
+                const user = await window.auth.requireAuth();
+                if (user) {
+                    document.getElementById('user-email').textContent = user.email;
+                    document.body.style.visibility = 'visible'; // Show content only if auth succeeds
+
+                    // Load saved settings
+                    setTimeout(() => {
+                        if (window.SettingsManager) window.SettingsManager.loadSettings();
+                    }, 500);
+                }
+            } catch (e) {
+                console.error("Auth check failed:", e);
+                window.location.href = 'login.html'; // Fallback to login on error
+            }
+        })();
+    </script>
+
+    <script src="cycle_momentum.js"></script>
+    <script src="cycle_bot.js"></script>
+    <script src="neural_net.js"></script>
+    <script src="main.js"></script>
+</body>
+
+</html>
+
+```

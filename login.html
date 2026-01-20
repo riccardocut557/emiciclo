@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Cycle Trading Bot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+
+        .login-container {
+            background: rgba(30, 30, 50, 0.9);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 16px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo p {
+            color: #9ca3af;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #9ca3af;
+        }
+
+        .tab.active {
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            color: white;
+        }
+
+        .tab:hover:not(.active) {
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #9ca3af;
+            font-size: 0.875rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .form-group input::placeholder {
+            color: #6b7280;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -10px rgba(99, 102, 241, 0.5);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            display: none;
+        }
+
+        .message.error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #fca5a5;
+            display: block;
+        }
+
+        .message.success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.5);
+            color: #86efac;
+            display: block;
+        }
+
+        .form-container {
+            display: none;
+        }
+
+        .form-container.active {
+            display: block;
+        }
+
+        .password-hint {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <h1>🔄 Cycle Trading Bot</h1>
+            <p>Advanced Trading Analysis Platform</p>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="login">Login</div>
+            <div class="tab" data-tab="signup">Sign Up</div>
+        </div>
+
+        <!-- Login Form -->
+        <div id="login-form" class="form-container active">
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" placeholder="your@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required>
+                    <div style="text-align: right; margin-top: 0.5rem;">
+                        <a href="#" id="forgot-link"
+                            style="color: #6366f1; font-size: 0.8rem; text-decoration: none;">Forgot Password?</a>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn" id="login-btn">
+                    Login
+                </button>
+            </form>
+        </div>
+
+        <!-- Signup Form -->
+        <div id="signup-form" class="form-container">
+            <form onsubmit="handleSignup(event)">
+                <div class="form-group">
+                    <label for="signup-email">Email</label>
+                    <input type="email" id="signup-email" placeholder="your@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">Password</label>
+                    <input type="password" id="signup-password" placeholder="••••••••" required minlength="6">
+                    <p class="password-hint">Minimum 6 characters</p>
+                </div>
+                <div class="form-group">
+                    <label for="signup-confirm">Confirm Password</label>
+                    <input type="password" id="signup-confirm" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="submit-btn" id="signup-btn">
+                    Create Account
+                </button>
+            </form>
+        </div>
+
+        <!-- Recovery Form (Send Email) -->
+        <div id="recovery-form" class="form-container">
+            <h3 style="text-align: center; margin-bottom: 1rem; font-size: 1.2rem;">Reset Password</h3>
+            <p style="text-align: center; font-size: 0.9rem; color: #9ca3af; margin-bottom: 1.5rem;">Enter your email to
+                receive recovery instructions.</p>
+            <form onsubmit="handleRecovery(event)">
+                <div class="form-group">
+                    <label for="recovery-email">Email</label>
+                    <input type="email" id="recovery-email" placeholder="your@email.com" required>
+                </div>
+                <button type="submit" class="submit-btn" id="recovery-btn">
+                    Send Recovery Email
+                </button>
+                <div style="text-align: center; margin-top: 1rem;">
+                    <a href="#" class="back-to-login"
+                        style="color: #9ca3af; font-size: 0.9rem; text-decoration: none;">Back to Login</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Reset Password Form (Set New Password) -->
+        <div id="reset-password-form" class="form-container">
+            <h3 style="text-align: center; margin-bottom: 1rem; font-size: 1.2rem;">Set New Password</h3>
+            <form onsubmit="handlePasswordUpdate(event)">
+                <div class="form-group">
+                    <label for="new-password">New Password</label>
+                    <input type="password" id="new-password" placeholder="••••••••" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="confirm-new-password">Confirm Password</label>
+                    <input type="password" id="confirm-new-password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="submit-btn" id="update-pass-btn">
+                    Update Password
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://mablwjbeltdtoocqnnhv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hYmx3amJlbHRkdG9vY3Fubmh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyNTE1MjYsImV4cCI6MjA4MjgyNzUyNn0.lLRDr3MEFfaIU-i28KkJBWddaWs-Aj_l1Ao4Rvdc81E';
+
+        // Initialize Supabase client
+        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
+    <script src="auth.js"></script>
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                const formId = tab.dataset.tab + '-form';
+                document.querySelectorAll('.form-container').forEach(f => f.classList.remove('active'));
+                document.getElementById(formId).classList.add('active');
+
+                hideMessage();
+            });
+        });
+
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = 'message ' + type;
+        }
+
+        function hideMessage() {
+            document.getElementById('message').className = 'message';
+        }
+
+        function setLoading(btnId, loading) {
+            const btn = document.getElementById(btnId);
+            if (loading) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="loading-spinner"></span>Loading...';
+            } else {
+                btn.disabled = false;
+                btn.textContent = btnId === 'login-btn' ? 'Login' : 'Create Account';
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            hideMessage();
+            setLoading('login-btn', true);
+
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            try {
+                await window.auth.signIn(email, password);
+                showMessage('Login successful! Redirecting...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            } catch (error) {
+                showMessage(error.message, 'error');
+                setLoading('login-btn', false);
+            }
+        }
+
+        async function handleSignup(e) {
+            e.preventDefault();
+            hideMessage();
+
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const confirm = document.getElementById('signup-confirm').value;
+
+            if (password !== confirm) {
+                showMessage('Passwords do not match', 'error');
+                return;
+            }
+
+            setLoading('signup-btn', true);
+
+            try {
+                const data = await window.auth.signUp(email, password);
+
+                if (data.user && !data.session) {
+                    // Email confirmation required
+                    showMessage('✉️ Check your email! Click the confirmation link to activate your account.', 'success');
+                } else if (data.session) {
+                    // Auto-confirmed (if email confirmation is disabled)
+                    showMessage('Account created! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1000);
+                }
+            } catch (error) {
+                showMessage(error.message, 'error');
+            }
+
+            setLoading('signup-btn', false);
+        }
+
+        // Check if already logged in (unless handling recovery)
+        (async () => {
+            // Listen for password recovery event
+            window.supabaseClient.auth.onAuthStateChange(async (event, session) => {
+                if (event === 'PASSWORD_RECOVERY') {
+                    // User clicked reset link and is now implicitly signed in with limited scope
+                    showResetPasswordForm();
+                }
+            });
+
+            // Normal redirect check
+            if (!window.location.hash.includes('type=recovery')) {
+                await window.auth.redirectIfAuthenticated();
+            }
+        })();
+
+        // Forgot Password Link
+        document.getElementById('forgot-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            showForm('recovery');
+        });
+
+        // Back to Login Links
+        document.querySelectorAll('.back-to-login').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.preventDefault();
+                showForm('login');
+                document.querySelector('.tab[data-tab="login"]').click();
+            });
+        });
+
+        function showForm(formName) {
+            hideMessage();
+            document.querySelectorAll('.form-container').forEach(f => f.classList.remove('active'));
+            document.getElementById(formName + '-form').classList.add('active');
+
+            // Handle tab styling
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            if (formName === 'login' || formName === 'signup') {
+                document.querySelector(`.tab[data-tab="${formName}"]`).classList.add('active');
+            }
+        }
+
+        function showResetPasswordForm() {
+            showForm('reset-password');
+            showMessage('Please set a new password.', 'success');
+        }
+
+        async function handleRecovery(e) {
+            e.preventDefault();
+            hideMessage();
+            setLoading('recovery-btn', true);
+
+            const email = document.getElementById('recovery-email').value;
+
+            try {
+                await window.auth.sendPasswordReset(email);
+                showMessage('✅ Check your email for the password reset link.', 'success');
+                document.getElementById('recovery-email').value = '';
+            } catch (error) {
+                showMessage(error.message, 'error');
+            }
+
+            setLoading('recovery-btn', false);
+        }
+
+        async function handlePasswordUpdate(e) {
+            e.preventDefault();
+            hideMessage();
+
+            const pass = document.getElementById('new-password').value;
+            const confirm = document.getElementById('confirm-new-password').value;
+
+            if (pass !== confirm) {
+                showMessage('Passwords do not match', 'error');
+                return;
+            }
+
+            setLoading('update-pass-btn', true);
+
+            try {
+                await window.auth.updatePassword(pass);
+                showMessage('Password updated! Redirecting to app...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+            } catch (error) {
+                showMessage(error.message, 'error');
+            }
+
+            setLoading('update-pass-btn', false);
+        }
+    </script>
+</body>
+
+</html>
